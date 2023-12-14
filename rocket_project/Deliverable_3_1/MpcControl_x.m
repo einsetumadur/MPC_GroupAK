@@ -34,13 +34,22 @@ classdef MpcControl_x < MpcControlBase
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
 
-            omega_y = X(1, :);
+            % omega_y = X(1, :);
             beta = X(2, :);
-            v_x = X(3, :);
-            x = X(4, :);
+            % v_x = X(3, :);
+            % x = X(4, :);
+
+            Q = 10 * eye(nx);
+            R = 1 * eye(nu);
 
             obj = 0;
-            con = [0.1745 <= beta, beta <= 0.1745];
+            con = [-0.1745 <= beta, beta <= 0.1745];
+            for i = 1:N-1
+                con = [con, X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i)];
+                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
+            end
+            con = [con, Ff*X(:,N) <= ff]; % Terminal constraint
+            obj = obj + X(:,N)'*Qf*X(:,N);
 
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
