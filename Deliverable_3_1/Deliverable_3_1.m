@@ -1,9 +1,3 @@
-addpath("Deliverable_3_1\", "templates", "src", "C:\Users\otcsi\Documents\School stuff\EPFL\MA1\Model predictive control\casadi-3.6.4-windows64-matlab2018b");
-addpath("tbxmanager\")
-
-%close all
-%clear all
-%clc
 
 
 %% TODO: This file should produce all the plots for the deliverable TODOs 1
