@@ -51,6 +51,7 @@ classdef MpcControl_x < MpcControlBase
             Xf = sys.LQRSet;
             
             con = (beta >= -0.1745) + (beta <= 0.1745);
+            con = con + (U <= 0.26) + (U >= -0.26);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));

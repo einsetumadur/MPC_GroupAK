@@ -21,7 +21,9 @@ x_x = [0, 0, 0, 3]';
 U_opt(:,end+1) = NaN;
 % Account for linearization point
 X_opt = X_opt + [xs(2); xs(5); xs(7); xs(10)];
-U_opt = U_opt + us;
-ph = rocket.plotvis_sub(T_opt, X_opt, U_opt, sys_x, xs, us); % Plot as usual
+U_opt = U_opt + us(2);
+
+[T, X_sub, U_sub] = rocket.simulate_f(sys_x, x_x, 5, @mpc_x.get_u, 0);
+ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_x, xs, us);
 
 %% TODO: This file should produce all the plots for the deliverable
