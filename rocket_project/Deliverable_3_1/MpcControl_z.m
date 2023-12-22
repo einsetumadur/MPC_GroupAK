@@ -45,10 +45,28 @@ classdef MpcControl_z < MpcControlBase
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-            
-            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+
+            Q = 100*eye(nx);
+            R = eye(nu);
+
+            us = 56.6667;
+
+            sys = LTISystem('A', mpc.A, 'B', mpc.B);
+            sys.u.min = 50 - us;
+            sys.u.max = 80 - us;
+            sys.x.penalty = QuadFunction(Q);
+            sys.u.penalty = QuadFunction(R);
+            Qf = sys.LQRPenalty.weight;
+            Xf = sys.LQRSet;
+
+            con = (us + U >= 50) + (us + U <= 80);
             obj = 0;
-            con = [];
+            for i = 1:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
+            end
+            con = con + (Xf.A*X(:,N) <= Xf.b);
+            obj = obj + X(:,N)'*Qf*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

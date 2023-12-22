@@ -39,19 +39,21 @@ classdef MpcControl_x < MpcControlBase
             % v_x = X(3, :);
             % x = X(4, :);
 
-            Q = 10*eye(nx);
+            Q = 100*eye(nx);
             R = eye(nu);
 
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
             sys.x.min(2) = -0.1745;
             sys.x.max(2) = 0.1745;
+            sys.u.min = -0.26;
+            sys.u.max = 0.26;
             sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
             
             con = (beta >= -0.1745) + (beta <= 0.1745);
-            con = con + (U <= 0.26) + (U >= -0.26);
+            con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
