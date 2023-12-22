@@ -32,24 +32,31 @@ classdef MpcControl_roll < MpcControlBase
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-            omega_z = X(:, 1);
-            gamma = X(:,2);
+            omega_z = X(1,:);
+            gamma = X(2,:);
 
-            Q=eye(4)*10;
-            R = eye(1);
+            Q=eye(nx)*10;
+            R = eye(nu);
 
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.u.max() = 
+            sys.u.max(1) = 20;
+            sys.u.min(1) = -20;
+            sys.x.penalty = QuadFunction(Q);
+            sys.u.penalty = QuadFunction(R);
+            Qf = sys.LQRPenalty.weight;
+            Xf = sys.LQRSet;
+
             
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             obj = 0;
-            con = [0<=U(:,1), U(:,1)<=100];
-            for k = 1:N
-                obj = obj + X(k)'*Q*X(k)+U(k)'*R*U(k);
-                con = [con, X(k+1,:) == mpc.A*X(k)+mpc.B*U(k)];
+            con = [0<=U(1,:), U(1,:)<=100];
+            for k = 1:N-1
+                obj = obj + X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
+                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
             end
-            con = [con, X]
+            con = [con, Xf.A*X(:,N)<=Xf.b];
+            obj = obj + X(:,N)'*Qf*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

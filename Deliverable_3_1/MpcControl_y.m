@@ -1,4 +1,4 @@
-classdef MpcControl_roll < MpcControlBase
+classdef MpcControl_y < MpcControlBase
     
     methods
         % Design a YALMIP optimizer object that takes a steady-state state
@@ -11,45 +11,30 @@ classdef MpcControl_roll < MpcControlBase
             %   x_ref, u_ref - reference state/input
             % OUTPUTS
             %   U(:,1)       - input to apply to the system
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             N_segs = ceil(H/Ts); % Horizon steps
             N = N_segs + 1;      % Last index in 1-based Matlab indexing
-            
+
             [nx, nu] = size(mpc.B);
             
-            % Steady-state targets (Ignore this before Todo 3.2)
+            % Targets (Ignore this before Todo 3.2)
             x_ref = sdpvar(nx, 1);
             u_ref = sdpvar(nu, 1);
             
             % Predicted state and input trajectories
             X = sdpvar(nx, N);
             U = sdpvar(nu, N-1);
-            % P_diff = U(:,1) 
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-            omega_z = X(:, 1);
-            gamma = X(:,2);
-
-            Q=eye(4)*10;
-            R = eye(1);
-
-            sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.u.max() = 
-            
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             obj = 0;
-            con = [0<=U(:,1), U(:,1)<=100];
-            for k = 1:N
-                obj = obj + X(k)'*Q*X(k)+U(k)'*R*U(k);
-                con = [con, X(k+1,:) == mpc.A*X(k)+mpc.B*U(k)];
-            end
-            con = [con, X]
+            con = [];
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,8 +55,9 @@ classdef MpcControl_roll < MpcControlBase
             %   xs, us - steady-state target
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
-            % Steady-state targets
             nx = size(mpc.A, 1);
+
+            % Steady-state targets
             xs = sdpvar(nx, 1);
             us = sdpvar;
             
