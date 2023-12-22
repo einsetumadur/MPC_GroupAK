@@ -39,16 +39,25 @@ classdef MpcControl_x < MpcControlBase
             % v_x = X(3, :);
             % x = X(4, :);
 
-            Q = 10 * eye(nx);
-            R = 1 * eye(nu);
+            Q = 10*eye(nx);
+            R = eye(nu);
 
+            sys = LTISystem('A', mpc.A, 'B', mpc.B);
+            sys.x.min(2) = -0.1745;
+            sys.x.max(2) = 0.1745;
+            sys.x.penalty = QuadFunction(Q);
+            sys.u.penalty = QuadFunction(R);
+            Qf = sys.LQRPenalty.weight;
+            Xf = sys.LQRSet;
+            
+            con = (beta >= -0.1745) + (beta <= 0.1745);
+            con = con + (U <= 0.26) + (U >= -0.26);
             obj = 0;
-            con = [-0.1745 <= beta, beta <= 0.1745];
             for i = 1:N-1
-                con = [con, X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i)];
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
                 obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
             end
-            con = [con, Ff*X(:,N) <= ff]; % Terminal constraint
+            con = con + (Xf.A*X(:,N) <= Xf.b);
             obj = obj + X(:,N)'*Qf*X(:,N);
 
             
@@ -83,8 +92,12 @@ classdef MpcControl_x < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            obj = 0;
-            con = [xs == 0, us == 0];
+            
+            obj = us'*us;
+            con = (mpc.A*xs + mpc.B*us == xs);
+            con = con + (mpc.C*xs + mpc.D*us == 0);
+            beta = xs(2, :);
+            con = con + (beta >= -0.1745) + (beta <= 0.1745);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
