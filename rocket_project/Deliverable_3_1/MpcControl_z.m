@@ -47,8 +47,46 @@ classdef MpcControl_z < MpcControlBase
             %       the DISCRETE-TIME MODEL of your system
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
-            obj = 0;
-            con = [];
+            %cost
+            Q = 1 * eye(nx);
+            R = 1;
+
+            % Constraints
+            % u in U = { u | Mu <= m }
+            M = [1;-1];
+            m = [80;-50];
+            % x in X = { x | Fx <= f }
+            F = [1 0;0 1;-1 0;0 -1]; 
+            f = [Inf;Inf;Inf;Inf];
+            
+            % Terminal cost unconstrained
+            [K,Qf,~] = dlqr(mpc.A,mpc.B,Q,R);
+            K = -K; 
+            Xf = polytope([F;M*K],[f;m]);
+            Acl = [mpc.A + mpc.B*K];
+
+            % Compute terminal set
+            while 1
+                prevXf = Xf;
+                [T,t] = double(Xf);
+                preXf = polytope(T*Acl,t);
+                Xf = intersect(Xf, preXf);
+                if isequal(prevXf, Xf)
+                    break
+                end
+            end
+            [Ff,ff] = double(Xf);
+
+            con = (X(:,2) == mpc.A*X(:,1) + mpc.B*U(:,1)) + (M*U(:,1) <= m);
+            obj = U(:,1)'*R*U(:,1);
+            for i = 2:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));    % System dynamics
+                con = con + (F*X(:,i) <= f) + (M*U(:,i) <= m);            % constraints
+                obj = obj + (X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i));        % Cost function
+            end
+            con = [con, Ff*X(:,N) <= ff]; % Terminal constraint
+            obj = obj + X(:,N)'*Qf*X(:,N); % Terminal weight
+
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
