@@ -22,17 +22,10 @@ rocket = Rocket(Ts);
 sys = rocket.linearize(xs,us);
 [sys_x, sys_y, sys_z, sys_roll] = rocket.decompose(sys, xs, us);
 
-H=1;
+sys_roll_d = c2d(sys_roll, Ts);
+sys_x_d = c2d(sys_x, Ts);
+sys_y_d = c2d(sys_y, Ts);
+sys_z_d = c2d(sys_z, Ts);
 
-mpc_x = MpcControl_x(sys_x, Ts, H);
 
-x_x = [0, 0, 0, 3]';
-[u, T_opt, X_opt, U_opt] = mpc_x.get_u(x_x);
-U_opt(:,end+1) = NaN;
-% Account for linearization point
-X_opt = X_opt + [xs(2); xs(5); xs(7); xs(10)];
-U_opt = U_opt + us(2);
-
-[T, X_sub, U_sub] = rocket.simulate_f(sys_x, x_x, 5, @mpc_x.get_u, 0);
-ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_x, xs, us);
-
+mpc_x = MpcControl_x(sys_x_d, Ts, H)

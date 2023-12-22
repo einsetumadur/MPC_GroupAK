@@ -51,13 +51,13 @@ classdef MpcControl_x < MpcControlBase
 
             obj = 0;
             con = [beta<=0.1745, beta>=-0.1745];
-            con = [con, U<=0.26, U>=-0.26];
+            con = [con, ]
             for k = 1: N-1
                 con = [con, X(:,k+1)==mpc.A*X(:,k)+mpc.B*U(:,k)];
                 obj = obj + X(:,k)' * Q*X(:,k) + U(:,k)'*R*U(:,k);
             end
             con = [con, Xf.A*X(:,N)<=Xf.b];
-            obj = obj+ X(:,N)'*Qf*X(:,N);
+            obj = obj+ X(:,N)'*Q*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
