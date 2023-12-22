@@ -65,3 +65,10 @@ mpc_y = MpcControl_y(sys_y, Ts, H);
 ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_y, xs, us);
 
 %% MPC_z
+H= 5;
+x_x = [0, 2]';
+mpc_z = MpcControl_z(sys_z, Ts, H);
+[u, T_opt, X_opt, U_opt] = mpc_z.get_u(x_x);
+
+[T, X_sub, U_sub] = rocket.simulate_f(sys_z, x_x, 5, @mpc_z.get_u, 0);
+ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_z, xs, us);
