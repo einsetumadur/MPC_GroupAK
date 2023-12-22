@@ -33,8 +33,29 @@ classdef MpcControl_y < MpcControlBase
             %       the DISCRETE-TIME MODEL of your system
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+            alpha = X(2,:);
+            alpha_lim = 0.1745;
+
+            Q = 10*eye(nx);
+            R = eye(nu);
+
+            sys = LTISystem('A', mpc.A, 'B', mpc.B);
+            sys.x.min(2) = -alpha_lim;
+            sys.x.max(2) = alpha_lim;
+            sys.x.penalty = QuadFunction(Q);
+            sys.u.penalty = QuadFunction(R);
+            Qf = sys.LQRPenalty.weight;
+            Xf = sys.LQRSet;
+            
+            con = (alpha >= - alpha_lim) + (alpha <= alpha_lim);
+            con = con + (U <= 0.26) + (U >= -0.26);
             obj = 0;
-            con = [];
+            for i = 1:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
+            end
+            con = con + (Xf.A*X(:,N) <= Xf.b);
+            obj = obj + X(:,N)'*Qf*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

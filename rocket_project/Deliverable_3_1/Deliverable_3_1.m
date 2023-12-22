@@ -44,4 +44,21 @@ U_opt = U_opt + us(2);
 [T, X_sub, U_sub] = rocket.simulate_f(sys_x, x_x, 5, @mpc_x.get_u, 0);
 ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_x, xs, us);
 
+%% Y Control
+% Design MPC controller
+H = 1; % Horizon length in seconds
+mpc_y = MpcControl_y(sys_y, Ts, H);
+
+% Evaluate once and plot optimal open−loop trajectory,
+% pad last input to get consistent size with time and state
+x_y = [0, 0, 0, 3]';
+[u, T_opt, X_opt, U_opt] = mpc_y.get_u(x_y);
+U_opt(:,end+1) = NaN;
+% Account for linearization point
+X_opt = X_opt + [xs(1); xs(4); xs(8); xs(11)];
+U_opt = U_opt + us(1);
+
+[T, X_sub, U_sub] = rocket.simulate_f(sys_y, x_y, 5, @mpc_y.get_u, 0);
+ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_y, xs, us);
+
 %% TODO: This file should produce all the plots for the deliverable
