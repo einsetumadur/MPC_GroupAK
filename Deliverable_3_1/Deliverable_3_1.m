@@ -41,11 +41,11 @@ U_opt = U_opt + us(2);
 ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_x, xs, us);
 
 %% MPC_roll
-H = 25;
+H = 5;
 
 mpc_roll = MpcControl_roll(sys_roll, Ts, H);
 
-x_x = [0, 1.2]';
+x_x = [0, 0.3]';
 [u, T_opt, X_opt, U_opt] = mpc_roll.get_u(x_x);
 U_opt(:,end+1) = NaN;
 % Account for linearization point
@@ -54,3 +54,14 @@ U_opt = U_opt + us(2);
 
 [T, X_sub, U_sub] = rocket.simulate_f(sys_roll, x_x, 5, @mpc_roll.get_u, 0);
 ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_roll, xs, us);
+
+%% MPC_y
+H= 5;
+x_x = [0, 0, 0, 3]';
+mpc_y = MpcControl_y(sys_y, Ts, H);
+[u, T_opt, X_opt, U_opt] = mpc_y.get_u(x_x);
+
+[T, X_sub, U_sub] = rocket.simulate_f(sys_y, x_x, 5, @mpc_y.get_u, 0);
+ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_y, xs, us);
+
+%% MPC_z

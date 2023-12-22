@@ -35,7 +35,7 @@ classdef MpcControl_roll < MpcControlBase
             omega_z = X(1,:);
             gamma = X(2,:);
 
-            Q=eye(nx)*10;
+            Q=eye(nx)*100;
             R = eye(nu);
 
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
@@ -50,7 +50,7 @@ classdef MpcControl_roll < MpcControlBase
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             obj = 0;
-            con = [0<=U(1,:), U(1,:)<=100];
+            con = [-20<=U(1,:), U(1,:)<=20];
             for k = 1:N-1
                 obj = obj + X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
                 con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
