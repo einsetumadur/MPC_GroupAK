@@ -48,25 +48,17 @@ classdef MpcControl_z < MpcControlBase
 
             Q = 100*eye(nx);
             R = eye(nu);
+            %P = dlyap(mpc.A, Q);
 
-            us = 56.6667;
+            us_sys = 56.6667;
 
-            sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.u.min = 50 - us;
-            sys.u.max = 80 - us;
-            sys.x.penalty = QuadFunction(Q);
-            sys.u.penalty = QuadFunction(R);
-            Qf = sys.LQRPenalty.weight;
-            Xf = sys.LQRSet;
-
-            con = (us + U >= 50) + (us + U <= 80);
+            con = (U+us_sys >= 50) + (U+us_sys <= 80);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
-                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            con = con + (Xf.A*X(:,N) <= Xf.b);
-            obj = obj + X(:,N)'*Qf*X(:,N);
+            %obj = obj + X(:,N)'*P*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,8 +96,13 @@ classdef MpcControl_z < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            obj = 0;
-            con = [xs == 0, us == 0];
+            
+            us_sys = 56.6667;
+
+            obj = us'*us;
+            con = (mpc.A*xs + mpc.B*us == xs);
+            con = con + (mpc.C*xs + mpc.D*us == ref);
+            con = con + (us+us_sys >= 50) + (us+us_sys <= 80);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

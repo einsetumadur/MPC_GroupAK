@@ -18,13 +18,13 @@ mpc_roll = MpcControl_roll(sys_roll, Ts, H);
 
 Tf = 7.0;
 x0 = zeros(4, 1);
-ref_x = [0, 0, 0, -4]';
+ref_x = -4;
 y0 = zeros(4, 1);
-ref_y = [0, 0, 0, -4]';
+ref_y = -4;
 z0 = zeros(2, 1);
-ref_z = [0, -4]';
+ref_z = -4;
 roll0 = zeros(2, 1);
-ref_roll = [0, deg2rad(35)]';
+ref_roll = deg2rad(35);
 
 rocket.anim_rate = 2.0;
 [T, X_sub, U_sub] = rocket.simulate_f(sys_x, x0, Tf, @mpc_x.get_u, ref_x);
