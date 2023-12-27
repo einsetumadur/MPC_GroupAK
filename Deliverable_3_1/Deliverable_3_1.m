@@ -1,5 +1,3 @@
-
-
 %% TODO: This file should produce all the plots for the deliverable TODOs 1
 % todo 1.1
 Ts = 1/20;

@@ -58,9 +58,11 @@ classdef MpcControl_x < MpcControlBase
             end
             con = [con, Xf.A*X(:,N)<=Xf.b];
             obj = obj+ X(:,N)'*Qf*X(:,N);
-
-            Xf.projection(1:2).plot();
             
+            Xf.projection(1:2).plot();
+            Xf.projection(2:3).plot();
+            Xf.projection(3:4).plot();
+
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
@@ -92,8 +94,11 @@ classdef MpcControl_x < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            obj = 0;
-            con = [xs == 0, us == 0];
+            obj = us'*us;
+            con = (mpc.A*xs + mpc.B*us == xs);
+            con = con + (mpc.C*xs + mpc.D*us == ref);
+            beta = xs(2, :);
+            con = con + (beta >= -0.1745) + (beta <= 0.1745);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

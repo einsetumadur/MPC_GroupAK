@@ -1,4 +1,4 @@
-classdef MpcControl_x < MpcControlBase
+classdef MpcControl_y < MpcControlBase
     
     methods
         % Design a YALMIP optimizer object that takes a steady-state state
@@ -33,33 +33,34 @@ classdef MpcControl_x < MpcControlBase
             %       the DISCRETE-TIME MODEL of your system
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
-            omega_y = X(1,:);
-            beta = X(2,:);
-            v_x = X(3,:);
-            x = X(4,:);
-
-            Q= 10*eye(nx);
-            R = eye(nu);
+            Q=eye(nx)*100;
+            R=eye(nu);
+            omega_x = X(1,:);
+            alpha = X(2,:);
+            v_y = X(3,:);
+            y = X(4,:);
+            
 
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
+            sys.u.min(1) = -0.26;
+            sys.u.max(1) = 0.26;
             sys.x.max(2) = 0.1745;
             sys.x.min(2) = -0.1745;
-            sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
+            sys.x.penalty = QuadFunction(Q);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
 
             obj = 0;
-            con = [beta<=0.1745, beta>=-0.1745];
-            con = [con, U<=0.26, U>=-0.26];
-            for k = 1: N-1
-                con = [con, X(:,k+1)==mpc.A*X(:,k)+mpc.B*U(:,k)];
-                obj = obj + X(:,k)' * Q*X(:,k) + U(:,k)'*R*U(:,k);
+            con = [alpha<=0.1745, alpha>=-0.1745];
+            con = [con, U(1,:)<=0.26, U(1,:)>=-0.26];
+
+            for k = 1:N-1
+                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
+                obj = obj+ X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
             end
             con = [con, Xf.A*X(:,N)<=Xf.b];
-            obj = obj+ X(:,N)'*Qf*X(:,N);
-
-            Xf.projection(1:2).plot();
+            obj = obj + X(:,N)'*Qf*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,8 +93,11 @@ classdef MpcControl_x < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            obj = 0;
-            con = [xs == 0, us == 0];
+            obj = us'*us;
+            con = (mpc.A*xs + mpc.B*us == xs);
+            con = con + (mpc.C*xs + mpc.D*us == ref);
+            alpha = xs(2, :);
+            con = con + (alpha >= -0.1745) + (alpha <= 0.1745);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
