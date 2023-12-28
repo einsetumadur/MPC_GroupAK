@@ -55,12 +55,16 @@ classdef MpcControl_y < MpcControlBase
             con = [alpha<=0.1745, alpha>=-0.1745];
             con = [con, U(1,:)<=0.26, U(1,:)>=-0.26];
 
-            for k = 1:N-1
-                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
-                obj = obj+ X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
+            
+            %P = dlyap(mpc.A, Q);
+            
+            con = (alpha >= -0.1745) + (alpha <= 0.1745);
+            con = con + (U >= -0.26) + (U <= 0.26);
+            obj = 0;
+            for i = 1:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            con = [con, Xf.A*X(:,N)<=Xf.b];
-            obj = obj + X(:,N)'*Qf*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -97,7 +101,8 @@ classdef MpcControl_y < MpcControlBase
             con = (mpc.A*xs + mpc.B*us == xs);
             con = con + (mpc.C*xs + mpc.D*us == ref);
             alpha = xs(2, :);
-            con = con + (alpha >= -0.1745) + (alpha <= 0.1745);
+            con = con + (alpha >= -0.1745) + (alpha <= 0.1745) + ...
+                (us(1,:)<=0.26)+(us(1,:)>=-0.26);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

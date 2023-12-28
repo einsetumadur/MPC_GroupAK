@@ -49,14 +49,12 @@ classdef MpcControl_roll < MpcControlBase
             
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+            con = (U >= -20) + (U <= 20);
             obj = 0;
-            con = [-20<=U(1,:), U(1,:)<=20];
-            for k = 1:N-1
-                obj = obj + X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
-                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
+            for i = 1:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            con = [con, Xf.A*X(:,N)<=Xf.b];
-            obj = obj + X(:,N)'*Qf*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

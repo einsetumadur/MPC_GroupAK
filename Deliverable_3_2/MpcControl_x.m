@@ -48,20 +48,13 @@ classdef MpcControl_x < MpcControlBase
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
-
+            con = (beta >= -0.1745) + (beta <= 0.1745);
+            con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;
-            con = [beta<=0.1745, beta>=-0.1745];
-            con = [con, U<=0.26, U>=-0.26];
-            for k = 1: N-1
-                con = [con, X(:,k+1)==mpc.A*X(:,k)+mpc.B*U(:,k)];
-                obj = obj + X(:,k)' * Q*X(:,k) + U(:,k)'*R*U(:,k);
+            for i = 1:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            con = [con, Xf.A*X(:,N)<=Xf.b];
-            obj = obj+ X(:,N)'*Qf*X(:,N);
-            
-            Xf.projection(1:2).plot();
-            Xf.projection(2:3).plot();
-            Xf.projection(3:4).plot();
 
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -99,6 +92,7 @@ classdef MpcControl_x < MpcControlBase
             con = con + (mpc.C*xs + mpc.D*us == ref);
             beta = xs(2, :);
             con = con + (beta >= -0.1745) + (beta <= 0.1745);
+            con = con + (us<=0.26)+ (us>=-0.26);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

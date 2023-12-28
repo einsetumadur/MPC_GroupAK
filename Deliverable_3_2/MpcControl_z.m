@@ -64,14 +64,18 @@ classdef MpcControl_z < MpcControlBase
             
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+            Q = 100*eye(nx);
+            R = eye(nu);
+            %P = dlyap(mpc.A, Q);
+            
+            us_sys = 56.6667;
+
+            con = (U+us_sys >= 50) + (U+us_sys <= 80);
             obj = 0;
-            con = [50-56<=U(1,:), U(1,:)<=80-56];
-            for k = 1:N-1
-                obj = obj + X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
-                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
+            for i = 1:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            con = [con, Xf.A*X(:,N)<=Xf.b];
-            obj = obj + X(:,N)'*Qf*X(:,N);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -109,6 +113,7 @@ classdef MpcControl_z < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
+            us_sys= 56.6;
             
             obj = us'*us;
             con = (mpc.A*xs + mpc.B*us == xs);
