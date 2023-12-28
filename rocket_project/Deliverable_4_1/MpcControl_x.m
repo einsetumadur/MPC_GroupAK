@@ -89,6 +89,7 @@ classdef MpcControl_x < MpcControlBase
             con = con + (mpc.C*xs + mpc.D*us == ref);
             beta = xs(2, :);
             con = con + (beta >= -0.1745) + (beta <= 0.1745);
+            con = con + (us >= -0.26) + (us <= 0.26);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -87,6 +87,7 @@ classdef MpcControl_y < MpcControlBase
             con = con + (mpc.C*xs + mpc.D*us == ref);
             alpha = xs(2, :);
             con = con + (alpha >= -0.1745) + (alpha <= 0.1745);
+            con = con + (us >= -0.26) + (us <= 0.26);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
