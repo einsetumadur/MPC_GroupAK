@@ -41,8 +41,17 @@ classdef MpcControl_x < MpcControlBase
 
             Q = 100*eye(nx);
             R = eye(nu);
-            %P = dlyap(mpc.A, Q);
             
+            sys = LTISystem('A', mpc.A, 'B', mpc.B);
+            sys.x.min(2) = -0.1745;
+            sys.x.max(2) = 0.1745;
+            sys.u.min = -0.26;
+            sys.u.max = 0.26;
+            sys.x.penalty = QuadFunction(Q);
+            sys.u.penalty = QuadFunction(R);
+            Qf = sys.LQRPenalty.weight;
+            Xf = sys.LQRSet;
+
             con = (beta >= -0.1745) + (beta <= 0.1745);
             con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;
@@ -50,7 +59,8 @@ classdef MpcControl_x < MpcControlBase
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            %obj = obj + X(:,N)'*P*X(:,N);
+            con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
+            obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
 
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE

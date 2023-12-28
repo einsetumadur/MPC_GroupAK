@@ -26,7 +26,7 @@ ref_z = -4;
 roll0 = zeros(2, 1);
 ref_roll = deg2rad(35);
 
-rocket.anim_rate = 2.0;
+rocket.anim_rate = 4.0;
 [T, X_sub, U_sub] = rocket.simulate_f(sys_x, x0, Tf, @mpc_x.get_u, ref_x);
 rocket.plotvis_sub(T, X_sub, U_sub, sys_x, xs, us, ref_x);
 [T, X_sub, U_sub] = rocket.simulate_f(sys_y, y0, Tf, @mpc_y.get_u, ref_y);
