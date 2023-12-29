@@ -1,4 +1,4 @@
-classdef MpcControl_roll < MpcControlBase
+classdef MpcControl_x < MpcControlBase
     
     methods
         % Design a YALMIP optimizer object that takes a steady-state state
@@ -11,14 +11,14 @@ classdef MpcControl_roll < MpcControlBase
             %   x_ref, u_ref - reference state/input
             % OUTPUTS
             %   U(:,1)       - input to apply to the system
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             N_segs = ceil(H/Ts); % Horizon steps
             N = N_segs + 1;      % Last index in 1-based Matlab indexing
-            
+
             [nx, nu] = size(mpc.B);
             
-            % Steady-state targets (Ignore this before Todo 3.2)
+            % Targets (Ignore this before Todo 3.2)
             x_ref = sdpvar(nx, 1);
             u_ref = sdpvar(nu, 1);
             
@@ -34,31 +34,32 @@ classdef MpcControl_roll < MpcControlBase
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
 
-        omega_z = X(1,:);
-            gamma = X(2,:);
+            % omega_y = X(1, :);
+            beta = X(2, :);
+            % v_x = X(3, :);
+            % x = X(4, :);
 
-            Q=eye(nx)*100;
+            Q = 10*eye(nx);
             R = eye(nu);
 
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.u.max(1) = 20;
-            sys.u.min(1) = -20;
+            sys.x.min(2) = -0.1745;
+            sys.x.max(2) = 0.1745;
             sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
-
             
-            
-            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+            con = (beta >= -0.1745) + (beta <= 0.1745);
+            con = con + (U <= 0.26) + (U >= -0.26);
             obj = 0;
-            con = [-20<=U(1,:), U(1,:)<=20];
-            for k = 1:N-1
-                obj = obj + X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
-                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
+            for i = 1:N-1
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
             end
-            con = [con, Xf.A*X(:,N)<=Xf.b];
+            con = con + (Xf.A*X(:,N) <= Xf.b);
             obj = obj + X(:,N)'*Qf*X(:,N);
+
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -79,8 +80,9 @@ classdef MpcControl_roll < MpcControlBase
             %   xs, us - steady-state target
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
-            % Steady-state targets
             nx = size(mpc.A, 1);
+
+            % Steady-state targets
             xs = sdpvar(nx, 1);
             us = sdpvar;
             
@@ -90,8 +92,12 @@ classdef MpcControl_roll < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            obj = 0;
-            con = [xs == 0, us == 0];
+ 
+            obj = us'*us;
+            con = (mpc.A*xs + mpc.B*us == xs);
+            con = con + (mpc.C*xs + mpc.D*us == 0);
+            beta = xs(2, :);
+            con = con + (beta >= -0.1745) + (beta <= 0.1745);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
