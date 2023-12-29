@@ -73,7 +73,7 @@ classdef MpcControl_z < MpcControlBase
             con = (U+us_sys >= 50) + (U+us_sys <= 80);
             obj = 0;
             for i = 1:N-1
-                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
+                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i)+ mpc.B*d_est);
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
             
@@ -114,9 +114,11 @@ classdef MpcControl_z < MpcControlBase
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
             us_sys= 56.6;
+
+
             
             obj = us'*us;
-            con = (mpc.A*xs + mpc.B*us == xs);
+            con = (mpc.A*xs + mpc.B*us+ mpc.B*d_est == xs);
             con = con + (mpc.C*xs + mpc.D*us == ref);
             con = con + (us+us_sys >= 50) + (us+us_sys <= 80);
             
@@ -140,7 +142,7 @@ classdef MpcControl_z < MpcControlBase
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
             
-            A_bar = [mpc.A, mpc.B; zeros(1,2), 0];
+            A_bar = [mpc.A, mpc.B; zeros(1,2), 1];
             B_bar = [mpc.B;0];
             C_bar = [mpc.C, 0];
             L = -place(A_bar',C_bar',[0.5,0.6,0.7])';
