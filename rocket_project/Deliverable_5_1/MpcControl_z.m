@@ -137,7 +137,7 @@ classdef MpcControl_z < MpcControlBase
             C_bar = [mpc.C,0 ];
             
             % observer dynamics
-            obs_dyn = [0.8,0.5,0.2]; %TODO choose good observer dynamics
+            obs_dyn = [0.03,0.02,0.01]; %TODO choose good observer dynamics
             L = -place(A_bar',C_bar',obs_dyn)';
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
