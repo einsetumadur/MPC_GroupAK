@@ -21,18 +21,18 @@ mpc_z = MpcControl_z(sys_z, Ts, H);
 % Merge four sub−system controllers into one full−system controller
 mpc = rocket.merge_lin_controllers(xs, us, mpc_x, mpc_y, mpc_z, mpc_roll);
 
-x0 = zeros(12, 1);
+x0 = [zeros(1,9), 1 0 3]';
 
 % Setup reference function
-ref = @(t_, x_) ref_TVC(t_);
+ref = [1.2,0,3,0]';
 
 % Simulate
-Tf = 30;
+Tf = 8;
 rocket.mass = 2.13;
 [T, X, U, Ref] = rocket.simulate_est_z(x0, Tf, @mpc.get_u, ref,mpc_z,sys_z);
 
 % Visualize
-rocket.anim_rate = 5; % Increase this to make the animation faster
+rocket.anim_rate = 1; % Increase this to make the animation faster
 ph = rocket.plotvis(T, X, U, Ref);
 ph.fig.Name = 'Merged lin. MPC in nonlinear simulation with const disturbance'; % Set a figure title
 

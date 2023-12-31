@@ -1,5 +1,5 @@
 %
-% Trace out an AK in ref_time seconds
+% Trace out an TVC in ref_time seconds
 %
 function Ref4 = ref_TVC(t, roll_max, tilt)
 
@@ -15,24 +15,22 @@ if nargin < 3
 end
 
 % Coordinates (x, y, heading)
+
 coords = [ ...
-    % T
-    0   0   0;
-    0   2   0;
-   -0.5 2   0;
-    0.5 2   0;
-    % V
-    1   0   0.5;
-    1.5 2   0.5;
-    
-    2   2   0.5;
-    % C
-    2.5 1.8 -1;
-    2   2   -1;
-    1.5 1.8 -1;
-    1.5 0.2 -1;
-    2   0   -1
-    2.5 0.2 -1;
+    % A
+    0 0 0;
+    0.66 2 0;
+    1 1 0;
+    0.33 1 0;
+    1 1 0;
+    1.33 0 0;
+    % K
+    2 0 0;
+    2 2 0;
+    2 1 0;
+    2.66 2 0;
+    2 1 0;
+    2.66 0 0;
     ];
 
 coords(:,1:2) = coords(:,1:2) - coords(1, 1:2);
