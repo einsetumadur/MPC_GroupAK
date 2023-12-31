@@ -1,4 +1,4 @@
-classdef MpcControl_x < MpcControlBase
+classdef MpcControl_roll < MpcControlBase
     
     methods
         % Design a YALMIP optimizer object that takes a steady-state state
@@ -11,14 +11,14 @@ classdef MpcControl_x < MpcControlBase
             %   x_ref, u_ref - reference state/input
             % OUTPUTS
             %   U(:,1)       - input to apply to the system
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             N_segs = ceil(H/Ts); % Horizon steps
             N = N_segs + 1;      % Last index in 1-based Matlab indexing
-
+            
             [nx, nu] = size(mpc.B);
             
-            % Targets (Ignore this before Todo 3.2)
+            % Steady-state targets (Ignore this before Todo 3.2)
             x_ref = sdpvar(nx, 1);
             u_ref = sdpvar(nu, 1);
             
@@ -32,48 +32,25 @@ classdef MpcControl_x < MpcControlBase
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
             
-            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
-            
-            %soft constraints on beta
-            E = sdpvar(1, N);
-            S = 1000; % quadratic
-            s = 2000; % linear - exact 
-
-            % omega_y = X(1, :);
-            beta = X(2, :);
-            % v_x = X(3, :);
-            % x = X(4, :);
-            
-            %Q = 100*eye(nx);
-            Q = diag([10 1 90 100]);
+            Q = 100*eye(nx);
             R = eye(nu);
             
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.x.min(2) = -0.1745;
-            sys.x.max(2) = 0.1745;
-            sys.u.min = -0.26;
-            sys.u.max = 0.26;
+            sys.u.min = -20;
+            sys.u.max = 20;
             sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
-
-            %con = (beta >= -0.1745) + (beta <= 0.1745);
-            %con = (beta + E >= -0.1745) + (beta - E <= 0.1745);
-            con = (abs(beta - E) <= 0.1745);
-            con = con + (E >= 0);
-            con = con + (U >= -0.26) + (U <= 0.26);
+            
+            con = (U >= -20) + (U <= 20);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
-                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref);
-                obj = obj + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
-                obj = obj + (E(i)*S*E(i)) + s*abs(E(i));
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
             con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
-            obj = obj + (E(N)*S*E(N)) + s*abs(E(N));
             obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
-
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -93,9 +70,8 @@ classdef MpcControl_x < MpcControlBase
             %   xs, us - steady-state target
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
-            nx = size(mpc.A, 1);
-
             % Steady-state targets
+            nx = size(mpc.A, 1);
             xs = sdpvar(nx, 1);
             us = sdpvar;
             
@@ -109,9 +85,7 @@ classdef MpcControl_x < MpcControlBase
             obj = us'*us;
             con = (mpc.A*xs + mpc.B*us == xs);
             con = con + (mpc.C*xs + mpc.D*us == ref);
-            beta = xs(2, :);
-            con = con + (beta >= -0.1745) + (beta <= 0.1745);
-            con = con + (us >= -0.26) + (us <= 0.26);
+            con = con + (us >= -20) + (us <= 20);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
