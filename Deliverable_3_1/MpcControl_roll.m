@@ -38,6 +38,7 @@ classdef MpcControl_roll < MpcControlBase
             Q=eye(nx)*100;
             R = eye(nu);
 
+            %setup final set
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
             sys.u.max(1) = 20;
             sys.u.min(1) = -20;
@@ -58,6 +59,10 @@ classdef MpcControl_roll < MpcControlBase
             con = [con, Xf.A*X(:,N)<=Xf.b];
             obj = obj + X(:,N)'*Qf*X(:,N);
             
+            %plots
+            figure;
+            Xf.plot();
+            title('Xf \omega_z \gamma');
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

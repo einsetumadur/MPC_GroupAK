@@ -41,6 +41,7 @@ classdef MpcControl_x < MpcControlBase
             Q= 10*eye(nx);
             R = eye(nu);
 
+            % calculate Xf
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
             sys.x.max(2) = 0.1745;
             sys.x.min(2) = -0.1745;
@@ -49,6 +50,7 @@ classdef MpcControl_x < MpcControlBase
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
 
+            % set constraints
             obj = 0;
             con = [beta<=0.1745, beta>=-0.1745];
             con = [con, U<=0.26, U>=-0.26];
@@ -59,7 +61,17 @@ classdef MpcControl_x < MpcControlBase
             con = [con, Xf.A*X(:,N)<=Xf.b];
             obj = obj+ X(:,N)'*Qf*X(:,N);
 
+            %plot figures
+            figure;
             Xf.projection(1:2).plot();
+            title('Xf \omega_y \beta');
+            figure;
+            Xf.projection(2:3).plot();
+            title('Xf \beta v_x');
+            figure;
+            Xf.projection(3:4).plot();
+            title('Xf v_x x');
+
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

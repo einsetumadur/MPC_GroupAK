@@ -53,6 +53,7 @@ classdef MpcControl_z < MpcControlBase
             Q=eye(nx)*100;
             R = eye(nu);
 
+            % setup final set
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
             sys.u.max(1) = 80-56;
             sys.u.min(1) = 50-56;
@@ -73,7 +74,10 @@ classdef MpcControl_z < MpcControlBase
             con = [con, Xf.A*X(:,N)<=Xf.b];
             obj = obj + X(:,N)'*Qf*X(:,N);
 
-            
+            % plots
+            figure;
+            Xf.plot();
+            title('Xf v_z z');
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
