@@ -53,11 +53,13 @@ classdef NmpcControl < handle
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
 
-            % {wx wy wz alpha beta gamma vx vy vz x y z}
+            % state = [wx wy wz alpha beta gamma vx vy vz x y z]
 
+            % Gains
             Q = 100*eye(nx);
             R = eye(nu);
 
+            % Integrator
             function [X_next] = RK4(X, U, h, f)
                 k1 = f(X, U);
                 k2 = f(X + h/2 * k1, U);
@@ -67,14 +69,36 @@ classdef NmpcControl < handle
             end
             f = @(x,u)rocket.f(x,u);
 
-            % delta_X(rocket.indx.pos,:) = X_sym(rocket.indx.pos,:) - ref_sym(1:3);
-            % delta_X(rocket.indx.phi(3),:) = X_sym(rocket.indx.phi(3),:) - ref_sym(4);
+            % Steady-state
+            [xs, us] = rocket.trim();
+
+            % Linearization for Qf
+            sys_d = c2d(rocket.linearize(xs, us), rocket.Ts);
+            sys = LTISystem('A', sys_d.A, 'B', sys_d.B);
+            sys.x.min(rocket.indx.phi(2)) = -deg2rad(75);
+            sys.x.max(rocket.indx.phi(2)) = deg2rad(75);
+            sys.u.min = rocket.lbu;
+            sys.u.max = rocket.ubu;
+            sys.x.penalty = QuadFunction(Q);
+            sys.u.penalty = QuadFunction(R);
+            Qf = sys.LQRPenalty.weight;
+
+            % X_sym, U_sym -> DeltaX, DeltaU
+            X_sym(rocket.indx.pos,:) = X_sym(rocket.indx.pos,:) - ref_sym(1:3);
+            X_sym(rocket.indx.phi(3),:) = X_sym(rocket.indx.phi(3),:) - ref_sym(4);
+            U_sym = U_sym - us;
 
             % Cost
             cost = 0;
             for i = 1:N-1
                 cost = cost + X_sym(:,i)'*Q*X_sym(:,i) + U_sym(:,i)'*R*U_sym(:,i);
             end
+            cost = cost + X_sym(:,N)'*Qf*X_sym(:,N);
+
+            % DeltaX, DeltaU -> X_sym, U_sym
+            X_sym(rocket.indx.pos,:) = X_sym(rocket.indx.pos,:) + ref_sym(1:3);
+            X_sym(rocket.indx.phi(3),:) = X_sym(rocket.indx.phi(3),:) + ref_sym(4);
+            U_sym = U_sym + us;
 
             % Equality constraints (Casadi SX), each entry == 0
             eq_constr = [X_sym(:,1)-x0_sym];
