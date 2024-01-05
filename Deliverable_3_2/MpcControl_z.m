@@ -62,14 +62,12 @@ classdef MpcControl_z < MpcControlBase
             Xf = sys.LQRSet;
 
             
-            
-            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             Q = 100*eye(nx);
             R = eye(nu);
-            %P = dlyap(mpc.A, Q);
             
             us_sys = 56.6667;
 
+            %setup the constraints
             con = (U+us_sys >= 50) + (U+us_sys <= 80);
             obj = 0;
             for i = 1:N-1

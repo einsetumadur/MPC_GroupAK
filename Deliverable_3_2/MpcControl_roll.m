@@ -38,6 +38,7 @@ classdef MpcControl_roll < MpcControlBase
             Q=eye(nx)*100;
             R = eye(nu);
 
+            %final set
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
             sys.u.max(1) = 20;
             sys.u.min(1) = -20;

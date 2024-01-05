@@ -48,6 +48,8 @@ classdef MpcControl_x < MpcControlBase
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
+
+            %setup the constraints
             con = (beta >= -0.1745) + (beta <= 0.1745);
             con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;

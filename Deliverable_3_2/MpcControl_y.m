@@ -51,13 +51,8 @@ classdef MpcControl_y < MpcControlBase
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
 
-            obj = 0;
-            con = [alpha<=0.1745, alpha>=-0.1745];
-            con = [con, U(1,:)<=0.26, U(1,:)>=-0.26];
-
             
-            %P = dlyap(mpc.A, Q);
-            
+            % setup the constraints          
             con = (alpha >= -0.1745) + (alpha <= 0.1745);
             con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;
