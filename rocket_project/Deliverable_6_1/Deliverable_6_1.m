@@ -11,11 +11,11 @@ H = 1.0; % Horizon length in seconds
 nmpc = NmpcControl(rocket, H);
 
 % MPC reference with default maximum roll = 15 deg
-ref = @(t_, x_) ref_TVC(t_);
+%ref = @(t_, x_) ref_TVC(t_);
 
 % MPC reference with specified maximum roll = 50 deg
-% roll_max = deg2rad(50);
-% ref = @(t_, x_) ref_TVC(t_, roll_max);
+roll_max = deg2rad(50);
+ref = @(t_, x_) ref_TVC(t_, roll_max);
 
 x0 = zeros(12, 1);
 
