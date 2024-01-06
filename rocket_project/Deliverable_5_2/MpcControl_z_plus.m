@@ -1,11 +1,11 @@
-classdef MpcControl_z < MpcControlBase
+classdef MpcControl_z_plus < MpcControlBase
     properties
         A_bar, B_bar, C_bar % Augmented system for disturbance rejection
         L                   % Estimator gain for disturbance rejection
     end
     
     methods
-        function mpc = MpcControl_z(sys, Ts, H)
+        function mpc = MpcControl_z_plus(sys, Ts, H)
             mpc = mpc@MpcControlBase(sys, Ts, H);
             
             [mpc.A_bar, mpc.B_bar, mpc.C_bar, mpc.L] = mpc.setup_estimator();
@@ -106,11 +106,15 @@ classdef MpcControl_z < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            
-            us_sys = 56.6667;
+            d_est = sdpvar(2,1);
 
-            obj = us'*us + d_est; % TODO choose better weigths
-            con = (mpc.A*xs + mpc.B*(us + d_est) == xs);
+            us_sys = 56.6667;
+            r = -0.27;
+
+            obj = us'*us + d_est'*d_est; % TODO choose better weigths
+            con = (mpc.A*xs + mpc.B*(us + d_est(1)) == xs);
+            con = con + (d_est(1) == d_est(1)+d_est(2));
+            con = con + (d_est(2) == r*mpc.Ts*us);
             con = con + (mpc.C*xs + mpc.D*us == ref);
             con = con + (us+ d_est +us_sys >= 50) + (us+d_est+us_sys <= 80);
             
@@ -134,13 +138,19 @@ classdef MpcControl_z < MpcControlBase
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
             
+            %disturbance dynamics
+            A_d = [1 mpc.Ts;0 1];
+            %r = 0;
+            r = -0.27*mpc.Ts;
+            
             %augmented system x_bar
-            A_bar = [mpc.A,mpc.B;zeros(1,2),1];
-            B_bar = [mpc.B;0];
-            C_bar = [mpc.C,0 ];
+            A_bar = [mpc.A,mpc.B,zeros(2,1);...
+                    zeros(2,2),A_d];
+            B_bar = [mpc.B;0;r];
+            C_bar = [mpc.C,0,0];
             
             % observer dynamics
-            obs_dyn = [0.03,0.02,0.01]; %TODO choose good observer dynamics
+            obs_dyn = [0.04,0.03,0.02,0.01]; %TODO choose good observer dynamics
             L = -place(A_bar',C_bar',obs_dyn)';
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE

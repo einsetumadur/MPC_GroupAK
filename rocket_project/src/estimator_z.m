@@ -15,16 +15,24 @@ idu_z = sys_z.UserData.idu;
 idy_z = sys_z.UserData.idy;
 us_z  = sys_z.UserData.us;
 
-% Estimation equation
-z_hat_z = mpc_z.A_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end)] + ...
-    mpc_z.B_bar * (u(idu_z) - us_z) + ...
-    mpc_z.L * (mpc_z.C_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end)] - x(idy_z));
-
+est_dim = size(mpc_z.B_bar,1)-2;
+if est_dim == 2  % modified estimator for varying dist rejection
+    z_hat_z = mpc_z.A_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end);0] + ...
+        mpc_z.B_bar * (u(idu_z) - us_z) + ... %[0;0;0;0.0135]*u(idu_z) + ...
+        mpc_z.L * (mpc_z.C_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end);0] - x(idy_z));
+else % Normal estimator for const dist rejection
+    % Estimation equation
+    z_hat_z = mpc_z.A_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end)] + ...
+        mpc_z.B_bar * (u(idu_z) - us_z) + ...
+        mpc_z.L * (mpc_z.C_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end)] - x(idy_z));
+end
 % Hand through true states except for estimated ones
 x_hat = x;
 x_hat(idx_z) = z_hat_z(1:2);
 
 % Concatenate estimation variable z = [x; est]
-z_hat_next = [x_hat; z_hat_z(3:end)];
+z_hat_next = [x_hat; z_hat_z(3)];
+
+error_on_rate = (z_hat_z(3) - z_hat(Rocket.dimx+1))/(u(idu_z) - us_z)
 
 end

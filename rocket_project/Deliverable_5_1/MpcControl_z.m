@@ -50,7 +50,6 @@ classdef MpcControl_z < MpcControlBase
             R = eye(nu);
 
             us = 56.6667;
-            d_est
 
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
             sys.u.min = 50 - us;
