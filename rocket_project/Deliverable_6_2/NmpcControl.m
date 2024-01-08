@@ -199,10 +199,15 @@ classdef NmpcControl < handle
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % Delay compensation: Save current u
             if obj.expected_delay > 0
-                u_opt_ = obj.get_U_opt();
-                % this might be wrong, because this is the u_opt starting
-                % at time t+delay, we want u_opt starting at time t !!
-                obj.mem_u = u_opt_(:, 2:obj.expected_delay+1);
+                % Example: with an expected delay of 3, we have:
+                %
+                %        x_ = [x0, x1, x2, x3]
+                %     mem_u = [m0, m1, m2]
+                %        u* =             [u0, u1, u3, ...]
+                % new mem_u =     [m1, m2, u0]
+
+                obj.mem_u(:,1:end-1) = obj.mem_u(:,2:end);
+                obj.mem_u(:,end) = u;
             end
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
