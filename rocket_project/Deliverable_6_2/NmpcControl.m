@@ -57,7 +57,9 @@ classdef NmpcControl < handle
 
             % Gains
             Q = 100*eye(nx);
-            R = 1*eye(nu);
+            Q(rocket.indx.vel(3), rocket.indx.vel(3)) = 400;
+            Q(rocket.indx.pos(3), rocket.indx.pos(3)) = 400;
+            R = eye(nu);
 
             % Integrator
             function [X_next] = RK4(X, U, h, f)
