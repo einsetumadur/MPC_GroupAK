@@ -42,6 +42,9 @@ classdef MpcControl_y < MpcControlBase
             S = 1000; % quadratic
             s = 100; % linear - exact 
 
+            % rate constraint on d1
+            rate_const = deg2rad(20)*Ts; 
+
             Q = 1*eye(nx);
             R = eye(nu);
             
@@ -63,6 +66,9 @@ classdef MpcControl_y < MpcControlBase
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
                 obj = obj + (E(i)*S*E(i)) + s*abs(E(i));
+            end
+            for i = 2:N-1
+                con = con + (abs(U(i) - U(i-1)) <= rate_const); 
             end
             con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
             obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);

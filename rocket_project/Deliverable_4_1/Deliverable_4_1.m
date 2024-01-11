@@ -29,6 +29,7 @@ ph = rocket.plotvis_sub(T, X_sub, U_sub, sys_x, xs, us, ref_x);
 ph.fig.Name = 'slack in linear simulation';
 
 %% Non Linear Simulation
+Tf = 7;
 x0 = zeros(12, 1);
 refx = [10,0, 0, 0]';
 
