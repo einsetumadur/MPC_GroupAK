@@ -1,7 +1,7 @@
 %
 % Trace out an TVC in ref_time seconds
 %
-function Ref4 = ref_TVC(t, roll_max, tilt)
+function Ref4 = ref_AK(t, roll_max, tilt)
 
 t = t(:);
 
@@ -18,19 +18,19 @@ end
 
 coords = [ ...
     % A
-    0 0 0;
-    0.66 2 0;
-    1 1 0;
-    0.33 1 0;
-    1 1 0;
-    1.33 0 0;
+    0 0 1;
+    0.66 2 1;
+    1 1 1;
+    0.33 1 1;
+    1 1 1;
+    1.33 0 1;
     % K
-    2 0 0;
-    2 2 0;
-    2 1 0;
-    2.66 2 0;
-    2 1 0;
-    2.66 0 0;
+    2 0 -1;
+    2 2 -1;
+    2 1 -1;
+    2.66 2 -1;
+    2 1 -1;
+    2.66 0 -1;
     ];
 
 coords(:,1:2) = coords(:,1:2) - coords(1, 1:2);
@@ -58,9 +58,9 @@ Roll = deg2rad(coords(target_id,3));
 
 if tilt
     % Rotate
-    alpha = deg2rad(-15); % -15
-    beta = deg2rad(19); % 19
-    gamma = deg2rad(-24); %-24
+    alpha = deg2rad(-90); 
+    beta = deg2rad(0); 
+    gamma = deg2rad(0);
     
     T = Rocket.eul2mat([alpha, beta, gamma]);
     XYZ = (T * XYZ')';

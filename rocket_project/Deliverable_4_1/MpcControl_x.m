@@ -33,13 +33,18 @@ classdef MpcControl_x < MpcControlBase
             %       the DISCRETE-TIME MODEL of your system
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
-
+            
             % omega_y = X(1, :);
             beta = X(2, :);
             % v_x = X(3, :);
             % x = X(4, :);
 
-            Q = 100*eye(nx);
+            %soft constraints on beta
+            E = sdpvar(1, N);
+            S = 1000; % quadratic
+            s = 100; % linear - exact 
+            
+            Q = 1*eye(nx);
             R = eye(nu);
             
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
@@ -52,14 +57,18 @@ classdef MpcControl_x < MpcControlBase
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
 
-            con = (beta >= -0.1745) + (beta <= 0.1745);
+            con = (beta + E >= -0.1745) + (beta - E <= 0.1745);
+            con = con + (E >= 0);
             con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
-                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref);
+                obj = obj + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
+                obj = obj + (E(i)*S*E(i)) + s*abs(E(i));
             end
             con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
+            obj = obj + (E(N)*S*E(N)) + s*abs(E(N));
             obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
 
             

@@ -31,13 +31,23 @@ classdef MpcControl_y < MpcControlBase
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-                
+            
+            slack = false;
+
             % omega_x = X(1, :);
             alpha = X(2, :);
             % v_y = X(3, :);
             % y = X(4, :);
+            
+            %soft constraints on alpha
+            if slack
+                E = sdpvar(1, N);
+                S = 1000; % quadratic
+                s = 100; % linear - exact 
+            end
 
-            Q = 100*eye(nx);
+            %Q = 1*eye(nx);
+            Q = diag([1 1 100 100]);
             R = eye(nu);
             
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
@@ -50,14 +60,24 @@ classdef MpcControl_y < MpcControlBase
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
             
-            con = (alpha >= -0.1745) + (alpha <= 0.1745);
-            con = con + (U <= 0.26) + (U >= -0.26);
+            con = (U >= -0.26) + (U <= 0.26);
+            if slack
+                con = con + (alpha + E >= -0.1745) + (alpha - E <= 0.1745);
+                con = con + (E >= 0);
+            end
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
-                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
+                obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref);
+                obj = obj + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
+                if slack 
+                    obj = obj + (E(i)*S*E(i)) + s*abs(E(i)); 
+                end
             end
             con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
+            if slack
+                obj = obj + (E(N)*S*E(N)) + s*abs(E(N));
+            end
             obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
