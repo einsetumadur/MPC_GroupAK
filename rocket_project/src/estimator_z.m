@@ -17,14 +17,14 @@ us_z  = sys_z.UserData.us;
 
 % Estimation equation
 z_hat_z = mpc_z.A_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end)] + ...
-    mpc_z.B_bar * (u(idu_z) - us_z) + ...
-    mpc_z.L * (mpc_z.C_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end)] - x(idy_z));
+mpc_z.B_bar * (u(idu_z) - us_z) + ...
+mpc_z.L * (mpc_z.C_bar * [z_hat(idx_z); z_hat(Rocket.dimx+1:end)] - x(idy_z));
 
 % Hand through true states except for estimated ones
 x_hat = x;
 x_hat(idx_z) = z_hat_z(1:2);
 
 % Concatenate estimation variable z = [x; est]
-z_hat_next = [x_hat; z_hat_z(3:end)];
+z_hat_next = [x_hat; z_hat_z(3)];
 
 end
