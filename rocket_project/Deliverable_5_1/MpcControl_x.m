@@ -34,22 +34,21 @@ classdef MpcControl_x < MpcControlBase
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             
-            slack = false;
-
             % omega_y = X(1, :);
             beta = X(2, :);
             % v_x = X(3, :);
             % x = X(4, :);
 
             %soft constraints on beta
-            if slack
-                E = sdpvar(1, N);
-                S = 1000; % quadratic
-                s = 100; % linear - exact 
-            end
-
-            Q = diag([1 1 100 100]);
-            R = 1*eye(nu);
+            E = sdpvar(1, N);
+            S = 1000; % quadratic
+            s = 100; % linear - exact 
+            
+            % rate constraint on d2
+            rate_const = deg2rad(20)*Ts;  
+            
+            Q = 1*eye(nx);
+            R = eye(nu);
             
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
             sys.x.min(2) = -0.1745;
@@ -61,25 +60,21 @@ classdef MpcControl_x < MpcControlBase
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
 
-            
-            con = (U >= -0.26) + (U <= 0.26);
-            if slack
-                con = con + (beta + E >= -0.1745) + (beta - E <= 0.1745);
-                con = con + (E >= 0);
-            end
+            con = (beta + E >= -0.1745) + (beta - E <= 0.1745);
+            con = con + (E >= 0);
+            con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref);
                 obj = obj + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
-                if slack 
-                    obj = obj + (E(i)*S*E(i)) + s*abs(E(i)); 
-                end
+                obj = obj + (E(i)*S*E(i)) + s*abs(E(i));
+            end
+            for i = 2:N-1
+                con = con + (abs(U(i) - U(i-1)) <= rate_const); 
             end
             con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
-            if slack
-                obj = obj + (E(N)*S*E(N)) + s*abs(E(N));
-            end
+            obj = obj + (E(N)*S*E(N)) + s*abs(E(N));
             obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
 
             

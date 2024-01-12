@@ -31,13 +31,21 @@ classdef MpcControl_y < MpcControlBase
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-                
+            
             % omega_x = X(1, :);
             alpha = X(2, :);
             % v_y = X(3, :);
             % y = X(4, :);
+            
+            %soft constraints on alpha
+            E = sdpvar(1, N);
+            S = 1000; % quadratic
+            s = 100; % linear - exact 
 
-            Q = 100*eye(nx);
+            % rate constraint on d1
+            rate_const = deg2rad(20)*Ts; 
+
+            Q = 1*eye(nx);
             R = eye(nu);
             
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
@@ -50,12 +58,17 @@ classdef MpcControl_y < MpcControlBase
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
             
-            con = (alpha >= -0.1745) + (alpha <= 0.1745);
+            con = (alpha + E >= -0.1745) + (alpha - E <= 0.1745);
+            con = con + (E >= 0);
             con = con + (U <= 0.26) + (U >= -0.26);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
+                obj = obj + (E(i)*S*E(i)) + s*abs(E(i));
+            end
+            for i = 2:N-1
+                con = con + (abs(U(i) - U(i-1)) <= rate_const); 
             end
             con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
             obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);

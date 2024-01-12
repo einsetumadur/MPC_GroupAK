@@ -46,7 +46,7 @@ classdef MpcControl_z < MpcControlBase
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
 
-            Q = 100*eye(nx);
+            Q = diag([100 1800]);
             R = eye(nu);
 
             us = 56.6667;
@@ -64,7 +64,7 @@ classdef MpcControl_z < MpcControlBase
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i) + mpc.B*(d_est));
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            %con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
+
             obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE

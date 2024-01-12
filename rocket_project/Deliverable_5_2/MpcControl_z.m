@@ -47,7 +47,7 @@ classdef MpcControl_z < MpcControlBase
             %       the DISCRETE-TIME MODEL of your system
             
             % on states vz z
-            Q = diag([100,100]);
+            Q = diag([100 1800]);
             % on input Pavg
             R = eye(nu);
            
