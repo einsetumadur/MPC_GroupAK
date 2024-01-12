@@ -25,32 +25,37 @@ classdef MpcControl_roll < MpcControlBase
             % Predicted state and input trajectories
             X = sdpvar(nx, N);
             U = sdpvar(nu, N-1);
+            % P_diff = U(:,1) 
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-            
-            Q = 100*eye(nx);
+            omega_z = X(1,:);
+            gamma = X(2,:);
+
+            Q=eye(nx)*100;
             R = eye(nu);
-            
+
+            %final set
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.u.min = -20;
-            sys.u.max = 20;
+            sys.u.max(1) = 20;
+            sys.u.min(1) = -20;
             sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
 
+            
+            
+            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             con = (U >= -20) + (U <= 20);
             obj = 0;
             for i = 1:N-1
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
-            obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -82,11 +87,10 @@ classdef MpcControl_roll < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            
             obj = us'*us;
-            con = (mpc.A*xs + mpc.B*us == xs);
-            con = con + (mpc.C*xs + mpc.D*us == ref);
-            con = con + (us >= -20) + (us <= 20);
+            con = mpc.A*xs+mpc.B*us==xs;
+            con = [con, mpc.C*xs+mpc.D*us==ref];
+            con = [con, us(1,:)<=20, us(1,:)>=-20];
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -33,25 +33,23 @@ classdef MpcControl_x < MpcControlBase
             %       the DISCRETE-TIME MODEL of your system
             
             % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+            omega_y = X(1,:);
+            beta = X(2,:);
+            v_x = X(3,:);
+            x = X(4,:);
 
-            % omega_y = X(1, :);
-            beta = X(2, :);
-            % v_x = X(3, :);
-            % x = X(4, :);
-
-            Q = 100*eye(nx);
+            Q= 10*eye(nx);
             R = eye(nu);
 
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.x.min(2) = -0.1745;
             sys.x.max(2) = 0.1745;
-            sys.u.min = -0.26;
-            sys.u.max = 0.26;
+            sys.x.min(2) = -0.1745;
             sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
-            
+
+            %setup the constraints
             con = (beta >= -0.1745) + (beta <= 0.1745);
             con = con + (U >= -0.26) + (U <= 0.26);
             obj = 0;
@@ -59,10 +57,7 @@ classdef MpcControl_x < MpcControlBase
                 con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
                 obj = obj + (X(:,i)-x_ref)'*Q*(X(:,i)-x_ref) + (U(:,i)-u_ref)'*R*(U(:,i)-u_ref);
             end
-            con = con + (Xf.A*(X(:,N)-x_ref) <= Xf.b);
-            obj = obj + (X(:,N)-x_ref)'*Qf*(X(:,N)-x_ref);
 
-            
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
@@ -94,13 +89,12 @@ classdef MpcControl_x < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            
             obj = us'*us;
             con = (mpc.A*xs + mpc.B*us == xs);
             con = con + (mpc.C*xs + mpc.D*us == ref);
             beta = xs(2, :);
             con = con + (beta >= -0.1745) + (beta <= 0.1745);
-            con = con + (us >= -0.26) + (us <= 0.26);
+            con = con + (us<=0.26)+ (us>=-0.26);
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
