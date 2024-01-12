@@ -35,7 +35,7 @@ if false
 end
 
 % Closed-loop with specified maximum roll = 50 deg
-if false
+if true
     roll_max = deg2rad(50);
     ref = @(t_, x_) ref_TVC(t_, roll_max);
     [T, X, U, Ref] = rocket.simulate(x0, Tf, @nmpc.get_u, ref);
@@ -44,7 +44,7 @@ if false
 end
 
 % Closed-loop linear controller with specified maximum roll = 50 deg
-if true
+if false
     roll_max = deg2rad(50);
     ref = @(t_, x_) ref_TVC(t_, roll_max);
     [xs, us] = rocket.trim();
