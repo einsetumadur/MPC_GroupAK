@@ -53,7 +53,7 @@ classdef NmpcControl < handle
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
 
-            % state = [wx wy wz alpha beta gamma vx vy vz x y z]
+            % state is [wx wy wz alpha beta gamma vx vy vz x y z]
 
             % Gains
             Q = 100*eye(nx);
@@ -162,7 +162,7 @@ classdef NmpcControl < handle
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
 
-            u_init = zeros(4, 1); % Replace this by a better initialization
+            u_init = us;
 
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,15 +173,19 @@ classdef NmpcControl < handle
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
-            delay = obj.expected_delay;
-            mem_u = obj.mem_u;
 
-            % Delay compensation: Predict x0 delay timesteps later.
-            % Simulate x_ for 'delay' timesteps
-            x_ = x0;
-            % ...
+            if obj.expected_delay > 0
+                delay = obj.expected_delay;
 
-            x0 = x_;
+                % Delay compensation: Predict x0 delay timesteps later.
+                % Simulate x_ for 'delay' timesteps
+                x_ = x0;
+                for i = 1:delay
+                    x_ = x_ + obj.rocket.Ts * obj.rocket.f(x_, obj.mem_u(:,i));
+                end
+                x0 = x_;
+            end
+
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -197,7 +201,15 @@ classdef NmpcControl < handle
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % Delay compensation: Save current u
             if obj.expected_delay > 0
-                % obj.mem_u = ...
+                % Example: with an expected delay of 3, we have:
+                %
+                %        x_ = [x0, x1, x2, x3]
+                %     mem_u = [m0, m1, m2]
+                %        u* =             [u0, u1, u3, ...]
+                % new mem_u =     [m1, m2, u0]
+
+                obj.mem_u(:,1:end-1) = obj.mem_u(:,2:end);
+                obj.mem_u(:,end) = u;
             end
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
