@@ -32,7 +32,7 @@ classdef MpcControl_roll < MpcControlBase
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
             
-            Q = 100*eye(nx);
+            Q = diag([100 100]);
             R = eye(nu);
             
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
