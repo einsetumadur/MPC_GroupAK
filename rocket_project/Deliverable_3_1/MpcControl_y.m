@@ -31,34 +31,50 @@ classdef MpcControl_y < MpcControlBase
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-                
-            % omega_x = X(1, :);
-            alpha = X(2, :);
-            % v_y = X(3, :);
-            % y = X(4, :);
+            
+            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+            Q=eye(nx)*100;
+            R=eye(nu);
+            omega_x = X(1,:);
+            alpha = X(2,:);
+            v_y = X(3,:);
+            y = X(4,:);
+            
 
-            Q = 100*eye(nx);
-            R = eye(nu);
-
+            %setup final set
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.x.min(2) = -0.1745;
+            sys.u.min(1) = -0.26;
+            sys.u.max(1) = 0.26;
             sys.x.max(2) = 0.1745;
-            sys.u.min = -0.26;
-            sys.u.max = 0.26;
-            sys.x.penalty = QuadFunction(Q);
+            sys.x.min(2) = -0.1745;
             sys.u.penalty = QuadFunction(R);
+            sys.x.penalty = QuadFunction(Q);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
-            
-            con = (alpha >= -0.1745) + (alpha <= 0.1745);
-            con = con + (U <= 0.26) + (U >= -0.26);
+
+            %setup constraints
             obj = 0;
-            for i = 1:N-1
-                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
-                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
+            con = [alpha<=0.1745, alpha>=-0.1745];
+            con = [con, U(1,:)<=0.26, U(1,:)>=-0.26];
+
+            for k = 1:N-1
+                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
+                obj = obj+ X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
             end
-            con = con + (Xf.A*X(:,N) <= Xf.b);
+            con = [con, Xf.A*X(:,N)<=Xf.b];
             obj = obj + X(:,N)'*Qf*X(:,N);
+
+            %plot figures
+            figure;
+            Xf.projection(1:2).plot();
+            title('Xf \omega_x \alpha');
+            figure;
+            Xf.projection(2:3).plot();
+            title('Xf \alpha v_y');
+            figure;
+            Xf.projection(3:4).plot();
+            title('Xf v_y y');
+            
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

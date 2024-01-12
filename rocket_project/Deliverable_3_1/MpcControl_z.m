@@ -45,28 +45,39 @@ classdef MpcControl_z < MpcControlBase
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
+            
+            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
+            v_z = X(1,:);
+            z = X(2,:);
 
-            Q = 100*eye(nx);
+            Q=eye(nx)*100;
             R = eye(nu);
 
-            us = 56.6667;
-
+            % setup final set
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.u.min = 50 - us;
-            sys.u.max = 80 - us;
+            sys.u.max(1) = 80-56;
+            sys.u.min(1) = 50-56;
             sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
 
-            con = (us + U >= 50) + (us + U <= 80);
+            
+            
+            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             obj = 0;
-            for i = 1:N-1
-                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
-                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
+            con = [50-56<=U(1,:), U(1,:)<=80-56];
+            for k = 1:N-1
+                obj = obj + X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
+                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
             end
-            con = con + (Xf.A*X(:,N) <= Xf.b);
+            con = [con, Xf.A*X(:,N)<=Xf.b];
             obj = obj + X(:,N)'*Qf*X(:,N);
+
+            % plots
+            figure;
+            Xf.plot();
+            title('Xf v_z z');
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -104,9 +115,10 @@ classdef MpcControl_z < MpcControlBase
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             % You can use the matrices mpc.A, mpc.B, mpc.C and mpc.D
-            obj = 0;
-            con = [xs == 0, us == 0];
-            
+            obj = us'*us;
+            con = mpc.A*xs+mpc.B*us==xs;
+            con = [con, mpc.C*xs+mpc.D*us==ref];
+            con = [con, us(1,:)<=20, us(1,:)>=-20];
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             

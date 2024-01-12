@@ -25,32 +25,44 @@ classdef MpcControl_roll < MpcControlBase
             % Predicted state and input trajectories
             X = sdpvar(nx, N);
             U = sdpvar(nu, N-1);
+            % P_diff = U(:,1) 
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             
             % NOTE: The matrices mpc.A, mpc.B, mpc.C and mpc.D are
             %       the DISCRETE-TIME MODEL of your system
-            
-            Q = 100*eye(nx);
+            omega_z = X(1,:);
+            gamma = X(2,:);
+
+            Q=eye(nx)*100;
             R = eye(nu);
 
+            %setup final set
             sys = LTISystem('A', mpc.A, 'B', mpc.B);
-            sys.u.min = -20;
-            sys.u.max = 20;
+            sys.u.max(1) = 20;
+            sys.u.min(1) = -20;
             sys.x.penalty = QuadFunction(Q);
             sys.u.penalty = QuadFunction(R);
             Qf = sys.LQRPenalty.weight;
             Xf = sys.LQRSet;
+
             
-            con = (U >= -20) + (U <= 20);
+            
+            % SET THE PROBLEM CONSTRAINTS con AND THE OBJECTIVE obj HERE
             obj = 0;
-            for i = 1:N-1
-                con = con + (X(:,i+1) == mpc.A*X(:,i) + mpc.B*U(:,i));
-                obj = obj + X(:,i)'*Q*X(:,i) + U(:,i)'*R*U(:,i);
+            con = [-20<=U(1,:), U(1,:)<=20];
+            for k = 1:N-1
+                obj = obj + X(:,k)'*Q*X(:,k)+U(:,k)'*R*U(:,k);
+                con = [con, X(:,k+1) == mpc.A*X(:,k)+mpc.B*U(:,k)];
             end
-            con = con + (Xf.A*X(:,N) <= Xf.b);
+            con = [con, Xf.A*X(:,N)<=Xf.b];
             obj = obj + X(:,N)'*Qf*X(:,N);
+            
+            %plots
+            figure;
+            Xf.plot();
+            title('Xf \omega_z \gamma');
             
             % YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE YOUR CODE HERE
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
